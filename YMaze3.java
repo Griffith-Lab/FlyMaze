@@ -80,7 +80,7 @@ public class YMaze3
 		boolean inPauseBlock = false;
 		boolean inAcclimation = false;
 		
-		int acclimationTime = 3000;
+		int acclimationTime = 30000;
 		
 		long pauseBeginTime = -1;
 		
