@@ -80,7 +80,7 @@ public class YMaze3
 		boolean inPauseBlock = false;
 		boolean inAcclimation = false;
 		
-		int acclimationTime = 300000;
+		int acclimationTime = 3000;
 		
 		long pauseBeginTime = -1;
 		
@@ -167,14 +167,14 @@ public class YMaze3
 				inReversalBlock = true;
 			}
 
-			if (extinction && !inExtinctionBlock && (counter < 20 || counter > 169))
+			if (!inExtinctionBlock && (counter < 20 || counter > 169))
 			{
-				System.out.println("EXTINCTIpauseBeginTimeON BLOCK\n");
+				System.out.println("EXTINCTION BLOCK\n");
 				servo.AccReset();
 				inExtinctionBlock = true;
 			}
 			
-			else if(extinction && inExtinctionBlock && (counter > 19 && counter < 170))
+			else if(inExtinctionBlock && (counter > 19 && counter < 170))
 			{
 				System.out.println("YMAZE");
 				servo.RewardReset();
