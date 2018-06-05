@@ -166,6 +166,20 @@ public class OpenLoopSpeedTraining
 				servo.RewardReset();
 				initialMotorTurn = false;
 			}
+			
+			if (!inExtinctionBlock && (counter < 20 || counter > 169))
+			{
+				System.out.println("EXTINCTION BLOCK\n");
+				servo.AccReset();
+				inExtinctionBlock = true;
+			}
+			
+			else if (inExtinctionBlock && (counter > 19 && counter < 170))
+			{
+				System.out.println("YMAZE");
+				servo.RewardReset();
+				inExtinctionBlock = false;
+			}
 			// If there isn't any data, don't try to process it
 			if(trackerInstance.getXs(0).size() == 0){
 				Thread.sleep(5);
@@ -189,7 +203,7 @@ public class OpenLoopSpeedTraining
 				continue;
 			}
 
-			///Calculate distance from center
+			// Calculate distance from center
 			deltX = actualX - center_x;
 			deltY = actualY - center_y;
 
@@ -225,15 +239,56 @@ public class OpenLoopSpeedTraining
 
 			}
 
-			//Move motors
+			// Use input event log to determine motor turn
 			if (turnDetected)
 			{
-				
+				rewardEntranceTime = aProc.runTime;
+				counter++;
+				inputSequenceOutcome = trialOutcomeList.remove(0);
 
+				if (inputSequenceOutcome.equals("Passed"))
+					correctTurn = true;
+				else
+					correctTurn = false;
+				
+				// checking right turn
+				if (inReversalBlock)
+					correctTurn = !correctTurn;
+
+				if (correctTurn)
+					trialOutcome = "Passed";
+				else
+					trialOutcome = "Failed";
+
+				// Output results to screen and file
+				System.out.println("Trial: " + counter + " Current Zone " + currentZone + " Time: " + rewardEntranceTime + " Trial Outcome: " + trialOutcome + "\n");
+				out.write(counter + "\t" + currentZone + "\t" + rewardEntranceTime + "\t" + trialOutcome + "\n");
+				out.flush();					
+				turnDetected = false;
 			}
 
-			else if (!inExtinctionBlock && !inPauseBlock && !conditionFailed && !inCenter && aProc.runTime - rewardEntranceTime > 10000 && !motorHasTurned)
-			{
+			// Move motors if the fly went the wrong way
+			if (!correctTurn && currentZone > 0 && !motorHasTurned){
+				if (!inExtinctionBlock && !inPauseBlock){
+					if (currentZone == 1)
+						servo.move(0, servoNeutralPosition);
+					else if (currentZone == 2)
+						servo.move(1, servoNeutralPosition);
+					else if (currentZone == 3)
+						servo.move(2, servoNeutralPosition);
+					motorHasTurned = true;
+					System.out.println("\nMotor Turn, failed condition\n");
+				}
+				else 
+					motorHasTurned = true;
+			}
+
+			else if (!inExtinctionBlock 
+					&& !inPauseBlock 
+					&& correctTurn
+					&& currentZone > 0 
+					&& aProc.runTime - rewardEntranceTime > 10000 
+					&& !motorHasTurned){
 				if (currentZone == 1)
 					servo.move(0, servoNeutralPosition);
 				else if (currentZone == 2)
@@ -245,13 +300,12 @@ public class OpenLoopSpeedTraining
 				System.out.println("\nMotor Turn, time over");
 			}
 
-			if (motorHasTurned && inCenter)
+			if (motorHasTurned && currentZone == 0)
 			{
 				if (!inExtinctionBlock && !inPauseBlock)
 					servo.RewardReset();
 				motorHasTurned = false;
 			}
-
 		}
 
 		// Once the analysis stops
