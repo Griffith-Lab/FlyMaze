@@ -166,6 +166,20 @@ public class OpenLoopSpeedTraining
 				servo.RewardReset();
 				initialMotorTurn = false;
 			}
+			
+			if (!inExtinctionBlock && (counter < 20 || counter > 169))
+			{
+				System.out.println("EXTINCTION BLOCK\n");
+				servo.AccReset();
+				inExtinctionBlock = true;
+			}
+			
+			else if (inExtinctionBlock && (counter > 19 && counter < 170))
+			{
+				System.out.println("YMAZE");
+				servo.RewardReset();
+				inExtinctionBlock = false;
+			}
 			// If there isn't any data, don't try to process it
 			if(trackerInstance.getXs(0).size() == 0){
 				Thread.sleep(5);
@@ -228,12 +242,23 @@ public class OpenLoopSpeedTraining
 			// Use input event log to determine motor turn
 			if (turnDetected)
 			{
+				rewardEntranceTime = aProc.runTime;
+				counter++;
 				inputSequenceOutcome = trialOutcomeList.remove(0);
 
 				if (inputSequenceOutcome.equals("Passed"))
 					correctTurn = true;
 				else
 					correctTurn = false;
+				
+				// checking right turn
+				if (inReversalBlock)
+					correctTurn = !correctTurn;
+
+				if (correctTurn)
+					trialOutcome = "Passed";
+				else
+					trialOutcome = "Failed";
 
 				// Output results to screen and file
 				System.out.println("Trial: " + counter + " Current Zone " + currentZone + " Time: " + rewardEntranceTime + " Trial Outcome: " + trialOutcome + "\n");
