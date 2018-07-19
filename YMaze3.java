@@ -20,8 +20,8 @@ public class YMaze3
 {
 	// Tracker Settings
 	static int camID = 0;
-	static int pixelThreshold = 40;
-	static int objectSize = 300;
+	static int pixelThreshold = 20;
+	static int objectSize = 200;
 	static boolean darkObject = true;
 	static int secsToRun = -1;
 	static boolean toFile = true;
@@ -41,13 +41,13 @@ public class YMaze3
 	static int EXTINCTION_TRIALS = 40; //20 in beginning, 20 in end
 	static int REVERSAL_TRIALS = 0;
 	
-	final static double center_x = 294;	// pixels 
-	final static double center_y = 257;	// pixels
+	final static double center_x = 251;	// pixels 
+	final static double center_y = 204;	// pixels 
 	final static double RADIUS_ONE = 6;	// mm
 	final static int yAxisCutoff = 60;	// pixels
 	final static double pxToMm = 11.2; 
-	final static double MAZE_Y_DIM = 31; //mm
-	final static double MAZE_X_DIM = 36; // mm
+	final static double MAZE_Y_DIM = 33; //mm
+	final static double MAZE_X_DIM = 37; // mm
 	final static long pauseBlockTime = 20; //seconds
 	
 	final static boolean extinction = true; //20 trials in beginning and end of
@@ -56,7 +56,7 @@ public class YMaze3
 	
 	public static void main(String[] args) throws Exception {
 
-		System.out.println("YMAZE");
+		System.out.println("YMAZE, left turn");
 
 		// Declare local variables
 		int actualY = -1;
@@ -77,10 +77,10 @@ public class YMaze3
 		
 		boolean inExtinctionBlock = false;
 		boolean inReversalBlock = false;
-		boolean inPauseBlock = false;
+		boolean inPauseBlock = false;	
 		boolean inAcclimation = false;
 		
-		int acclimationTime = 30000;
+		int acclimationTime = 300000;
 		
 		long pauseBeginTime = -1;
 		
@@ -137,7 +137,8 @@ public class YMaze3
 		trackerInstance.setVisible(true);
 
 		servo = new ServoControl();
-
+		servo.AccReset();
+		
 		// Wait until the analysis starts
 		while(!trackerInstance.analysisRunning){
 			Thread.sleep(100);
@@ -155,31 +156,25 @@ public class YMaze3
 		
 		while(trackerInstance.analysisRunning && (counter < totalTrials || inPauseBlock))
 		{	
-			if (initialMotorTurn)
-			{
-				servo.RewardReset();
-				initialMotorTurn = false;
-			}
-
 			if (reversal && !inReversalBlock && counter >= (totalTrials - NUMBER_OF_TRIALS))
 			{
 				System.out.println("REVERSAL BLOCK\n");
 				inReversalBlock = true;
 			}
 
-			if (!inExtinctionBlock && (counter < 20 || counter > 169))
-			{
-				System.out.println("EXTINCTION BLOCK\n");
-				servo.AccReset();
-				inExtinctionBlock = true;
-			}
-			
-			else if(inExtinctionBlock && (counter > 19 && counter < 170))
-			{
-				System.out.println("YMAZE");
-				servo.RewardReset();
-				inExtinctionBlock = false;
-			}
+//			if (!inExtinctionBlock && (counter < 21 || counter > 160))
+//			{
+//				System.out.println("EXTINCTION BLOCK\n");
+//				servo.AccReset();
+//				inExtinctionBlock = true;
+//			}
+//			
+//			else if(inExtinctionBlock && (counter > 20 && counter < 161))
+//			{
+//				System.out.println("YMAZE");
+//				servo.RewardReset();
+//				inExtinctionBlock = false;
+//			}
 
 			if (pause && !inPauseBlock && counter == (int)(NUMBER_OF_TRIALS+EXTINCTION_TRIALS+REVERSAL_TRIALS)/2)
 			{
@@ -278,7 +273,7 @@ public class YMaze3
 				// checking right turn
 				if (inReversalBlock)
 					correctTurn = !correctTurn;
-
+				
 				if (correctTurn)
 					trialOutcome = "Passed";
 				else
@@ -291,9 +286,23 @@ public class YMaze3
 				turnDetected = false;
 			}
 
+			if (!inExtinctionBlock && (counter < 21 || counter > 160))
+			{
+				System.out.println("EXTINCTION BLOCK\n");
+				servo.AccReset();
+				inExtinctionBlock = true;
+			}
+			
+			else if(inExtinctionBlock && (counter > 20 && counter < 161))
+			{
+				System.out.println("YMAZE");
+				servo.RewardReset();
+				inExtinctionBlock = false;
+			}
+			
 			// Move motors if the fly went the wrong way
 			if (!correctTurn && currentZone > 0 && !motorHasTurned){
-				if (!inExtinctionBlock && !inPauseBlock){
+				if (!inExtinctionBlock && !inPauseBlock || counter == 20){
 					if (currentZone == 1)
 						servo.move(0, servoNeutralPosition);
 					else if (currentZone == 2)
@@ -308,11 +317,11 @@ public class YMaze3
 			}
 
 			else if (!inExtinctionBlock 
-					 && !inPauseBlock 
-					 && correctTurn
-					 && currentZone > 0 
-					 && aProc.runTime - rewardEntranceTime > 10000 
-					 && !motorHasTurned){
+					&& !inPauseBlock 
+					&& correctTurn
+					&& currentZone > 0 
+					&& aProc.runTime - rewardEntranceTime > 10000 
+					&& !motorHasTurned){
 				if (currentZone == 1)
 					servo.move(0, servoNeutralPosition);
 				else if (currentZone == 2)
