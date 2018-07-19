@@ -38,7 +38,7 @@ public class YMaze3
 
 	// Training Settings
 	final static int NUMBER_OF_TRIALS = 140;
-	static int EXTINCTION_TRIALS = 40; //20 in beginning, 20 in end
+	static int EXTINCTION_TRIALS = 20; //20 in beginning, 20 in end
 	static int REVERSAL_TRIALS = 0;
 	
 	final static double center_x = 251;	// pixels 
@@ -286,14 +286,14 @@ public class YMaze3
 				turnDetected = false;
 			}
 
-			if (!inExtinctionBlock && (counter < 21 || counter > 160))
+			if (!inExtinctionBlock && (counter < 21))
 			{
 				System.out.println("EXTINCTION BLOCK\n");
 				servo.AccReset();
 				inExtinctionBlock = true;
 			}
 			
-			else if(inExtinctionBlock && (counter > 20 && counter < 161))
+			else if(inExtinctionBlock && (counter > 20))
 			{
 				System.out.println("YMAZE");
 				servo.RewardReset();
